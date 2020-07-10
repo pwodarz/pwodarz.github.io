@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+	<title>CS 105 PROJECT</title>
+	<style>
+		table {border-collapse: collapse;}
+		table, td, th {border: 1px solid black;}
+	</style>
+</head>
+<body>
+<h1>Calculating Physical Attributes</h1>
+<hr>
+<p>This tool was design to calculate various physical attributes</p>
+<form>
+	Units: <input type="radio" name="userunits" value="metric" checked>Metric/SI
+			<input type="radio" name="userunits" value="us">United States Customary
+	<br>
+	Gender: <input type="radio" name="usergender" value="male" checked>Male
+			<input type="radio" name="usergender" value="female">Female
+	<br>
+	Weight (lbs/kg): <input type="number" id="Weight" name="userweight"/>
+	<br>
+	Age (years): <input type="number" id="Age" name="userage"/>
+	<br>
+	Height (inches/cm): <input type="number" id="Height" name="userheight"/>
+	<br>
+	Activity level: 
+					<input type="radio" name="useractivitylevel" value="sedentary" checked>Sedentary
+					<input type="radio" name="useractivitylevel" value="lightly active">Lightly active				
+					<input type="radio" name="useractivitylevel" value="moderately active">Moderately active			
+					<input type="radio" name="useractivitylevel" value="very active">Very active			
+					<input type="radio" name="useractivitylevel" value="extra active">Extra active
+	<br>
+	<input type="submit" id="Button2" onclick="Weightlosscalc(this.form.userunits.value, this.form.usergender.value, this.form.userweight.value, this.form.userage.value, this.form.userheight.value, this.form.useractivitylevel.value);return false;"/>
+</form>
+<p id="bmi"></p>
+<p id="bmiprofile"></p>
+<p id="normalweight"></p>
+<p id="bmr"></p>
+<p id="caloriesburnedperday"></p>
+<p>If you consumed the above amount of calories per day, you could lose weight based upon the table below.
+Based upon how much weight you wish to lose per week and the type of exercise that you wish to perform,
+the table below will provide the duration you need to perform that activity to lose the desired weight.</p>
+<table id="METtable">
+	<tr>
+		<td>Weight Loss/Activity</td>
+		<td>Weightlifting</td>
+		<td>Walking</td>
+		<td>Running</td>
+		<td>Biking</td>
+	</tr>
+	<tr>
+		<td>.5 lb/week</td>
+		<td> </td>
+		<td> </td>
+		<td> </td>
+		<td> </td>
+	</tr>
+	<tr>
+		<td>1 lb/week</td>
+		<td> </td>
+		<td> </td>
+		<td> </td>
+		<td> </td>
+	</tr>
+	<tr>
+		<td>2 lbs/week</td>
+		<td> </td>
+		<td> </td>
+		<td> </td>
+		<td> </td>
+	</tr>
+</table>
+<hr>
+<p>This tool was design to determine body fat percentage based on the YMCA formula</p>
+<form>
+	Gender: <input type="radio" name="usergender" value="male" checked>Male
+			<input type="radio" name="usergender" value="female">Female
+	<br>
+	Weight (lbs): <input type="number" id="Weight" name="userweight"/>
+	<br>
+	Waist Measurement (at naval height in inches): <input type="number" id="Waist" name="userwaist"/>
+	<br>
+	<input type="submit" id="Button2" onclick="YMCAcalc(this.form.usergender.value, this.form.userweight.value, this.form.userwaist.value);return false;"/>
+</form>
+<p id="YMCAbfp"></p>
+<hr>
+<p>This tool was designed to calculate lean body mass</p>
+<form>
+	Weight (lbs):<input type="number" id="Weight" name="userweight"/> 
+	<br>
+	Please enter the body fat percentage from the above formula: <input type="number" id="BodyFatPercentage" name="userBMI"/>
+	<input type="submit" id="Button4" onclick="Bodylean(this.form.userweight.value, this.form.userBMI.value); return false;"/>
+</form>
+<p id="BLM"></p>
+<hr>
+<p>This tool was designed to determine your Target Heart Rate Limits</p>
+<form>
+	Age: <input type="number" id="age" name="userage"/>
+	<br>
+	Resting Heart Rate (Count your pulse for 60 seconds): <input type="number" id="restinghr" name="userrestinghr"/>
+	<input type="submit" id="Button5" onclick="heartratecalc(this.form.userage.value, this.form.userrestinghr.value);return false;"/>
+</form>
+<p id="maxHR"></p>
+<p id="HRreserve"></p>
+<p id="lowertargetHR"></p>
+<p id="uppertargetHR"></p>
+<p id="targetHR"></p>
+</body>
+<script>
+function YMCAcalc(gender, weight, waist)
+	{
+	var bfp=0;
+	if (gender=="male")
+		{
+		bfp=(-98.42+4.15*waist-.082*weight)/weight;
+		document.getElementById("YMCAbfp").innerHTML=bfp*100+"%";
+		}
+	if (gender=="female")
+		{
+		bfp=(-76.76+4.15*waist-.082*weight)/weight;
+		document.getElementById("YMCAbfp").innerHTML=bfp*100+"%";
+		}
+	}
+function Weightlosscalc(units, gender, weight, age, height, activitylevel)
+	{
+	var bmr=0;
+	var caloriesmaintain=0;
+	var bmi=0;
+	var needtolose=0;
+	if(units=="us")
+		{
+		weight=weight*0.453592;
+		height=height*2.54;
+		}
+	bmi=(weight/((height/100)*(height/100)));
+	document.getElementById("bmi").innerHTML="Your BMI (Body Mass Index) is: "+bmi.toFixed(2);
+	if (bmi<18.5)
+		document.getElementById("bmiprofile").innerHTML="You are underweight (BMI<18.5)";
+	if (bmi>=18.5 && bmi<25)
+		document.getElementById("bmiprofile").innerHTML="You are a normal weight (18.5<=BMI<25)";
+	if (bmi>=25 && bmi<30)
+		document.getElementById("bmiprofile").innerHTML="You are overweight (25<=BMI<30)";
+	if (bmi>=30)
+		document.getElementById("bmiprofile").innerHTML="You are obese (BMI>=30)";
+	var needtolose=weight-(25*(height/100)*(height/100))
+	if(units=="us")
+		{
+		if(needtolose>=0)
+			document.getElementById("normalweight").innerHTML="You would need to lose "+(needtolose*2.2).toFixed(2)+" lbs to be considered normal weight";
+		if(needtolose<0)
+			document.getElementById("normalweight").innerHTML="You do not need to lose weight"
+		}
+	else
+		{
+		if(needtolose>=0)
+			document.getElementById("normalweight").innerHTML="You would need to lose "+needtolose.toFixed(2)+" kilograms to be considered normal weight";
+		if(needtolose<0)
+			document.getElementById("normalweight").innerHTML="You do not need to lose weight"
+		}
+	if(gender=="male")
+		{
+		bmr=88.362+(13.397*weight)+(4.799*height)-(5.677*age);
+		document.getElementById("bmr").innerHTML="Your BMR (Basal Metabolic Rate) is: "+bmr.toFixed(2);
+		}
+	if(gender=="female")
+		{
+		bmr=447.593+(9.247*weight)+(3.098*height)-(4.330*age);
+		document.getElementById("bmr").innerHTML="Your BMR (Basal Metabolic Rate) is: "+bmr.toFixed(2);
+		}
+	if(activitylevel=="sedentary")
+		{
+		caloriesmaintain=bmr*1.2;
+		}
+	if(activitylevel=="lightly active")
+		{
+		caloriesmaintain=bmr*1.3;
+		}
+	if(activitylevel=="moderately active")
+		{
+		caloriesmaintain=bmr*1.4;
+		}
+	if(activitylevel=="very active")
+		{
+		caloriesmaintain=bmr*1.5;
+		}
+	if(activitylevel=="extra active")
+		{
+		caloriesmaintain=bmr*1.6;
+		}
+	document.getElementById("caloriesburnedperday").innerHTML="To maintain current weight you need to consume "+caloriesmaintain.toFixed(2)+" calories per day";
+	var runningMET=7.5;
+	var bikingMET=8.0;
+	var walkingMET=3.8;
+	var weightMET=3.0;
+	var runningburn250=60*250/(runningMET*weight);
+		document.getElementById("METtable").rows[1].cells[3].innerHTML=runningburn250.toFixed(2)+" min/day";
+	var runningburn500=60*500/(runningMET*weight);
+		document.getElementById("METtable").rows[2].cells[3].innerHTML=runningburn500.toFixed(2)+" min/day";
+	var runningburn1000=60*1000/(runningMET*weight);
+		document.getElementById("METtable").rows[3].cells[3].innerHTML=runningburn1000.toFixed(2)+" min/day";
+	var bikingburn250=60*250/(bikingMET*weight);
+		document.getElementById("METtable").rows[1].cells[4].innerHTML=bikingburn250.toFixed(2)+" min/day";
+	var bikingburn500=60*500/(bikingMET*weight);
+		document.getElementById("METtable").rows[2].cells[4].innerHTML=bikingburn500.toFixed(2)+" min/day";
+	var bikingburn1000=60*1000/(bikingMET*weight);
+		document.getElementById("METtable").rows[3].cells[4].innerHTML=bikingburn1000.toFixed(2)+" min/day";
+	var walkingburn250=60*250/(walkingMET*weight);
+		document.getElementById("METtable").rows[1].cells[2].innerHTML=walkingburn250.toFixed(2)+" min/day";
+	var walkingburn500=60*500/(walkingMET*weight);
+		document.getElementById("METtable").rows[2].cells[2].innerHTML=walkingburn500.toFixed(2)+" min/day";
+	var walkingburn1000=60*1000/(walkingMET*weight);
+		document.getElementById("METtable").rows[3].cells[2].innerHTML=walkingburn1000.toFixed(2)+" min/day";
+	var weightburn250=60*250/(weightMET*weight);
+		document.getElementById("METtable").rows[1].cells[1].innerHTML=weightburn250.toFixed(2)+" min/day";
+	var weightburn500=60*500/(weightMET*weight);
+		document.getElementById("METtable").rows[2].cells[1].innerHTML=weightburn500.toFixed(2)+" min/day";
+	var weightburn1000=60*1000/(weightMET*weight);
+		document.getElementById("METtable").rows[3].cells[1].innerHTML=weightburn1000.toFixed(2)+" min/day";
+	}
+function heartratecalc(age,restinghr)
+	{
+	var maxhr=220-age;
+	var hrreserve=maxhr-restinghr;
+	var lowertargethr=(hrreserve*0.6)+restinghr*1;
+	var uppertargethr=(hrreserve*0.8)+restinghr*1;
+	var targethr=(hrreserve*0.7)+restinghr*1;
+	document.getElementById("maxHR").innerHTML="Max Heart Rate: "+maxhr;
+	document.getElementById("HRreserve").innerHTML="Heart Rate Reserve: "+hrreserve;
+	document.getElementById("lowertargetHR").innerHTML="Lower Target Heart Rate: "+lowertargethr;
+	document.getElementById("uppertargetHR").innerHTML="Upper Target Heart Rate: "+uppertargethr;
+	document.getElementById("targetHR").innerHTML="Target Heart Rate: "+targethr;
+	}
+function Bodylean( weight, BodyFatPercentage)
+	{
+		var blm = (weight-(weight*(BodyFatPercentage/100)));
+		document.getElementById("BLM").innerHTML=blm;
+	}
+</script>
+</html>
