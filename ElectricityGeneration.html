@@ -5,14 +5,24 @@
 <body onload='init()'>
 	<style>
          body { font-family: Arial; }
+		 button {
+			background-color: #46b47d; 
+			border: none;
+			color: white;
+			padding: 15px 32px;
+			text-align: center;
+			text-decoration: none;
+			display: inline-block;
+			font-size: 16px;
+		 }		 
     </style>
 	
 	<div id = "nav">
-	<button onclick="window.location.href='./ReactorConstruction.html';">Previous</button>
-	<button onclick="window.location.href='./ReactorsToday.html';">Next</button>
+	<button class="button Previous" onclick="window.location.href='./ReactorConstruction.html';">Previous</button>
+	<button class="button Previous" onclick="window.location.href='./ReactorsToday.html';">Next</button>
 	</div>
 	
-	<p>Nulcear Electricity Generation</p>
+	<center><h2>Nulcear Electricity Generation (Net and Share)</h2></center>
 	<center><div id="viz_1"></div></center>
 	
 	<script>

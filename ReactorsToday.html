@@ -6,13 +6,28 @@
 <body onload='init()'>
 	<style>
          body { font-family: Arial; }
+		 button {
+			background-color: #46b47d; 
+			border: none;
+			color: white;
+			padding: 15px 32px;
+			text-align: center;
+			text-decoration: none;
+			display: inline-block;
+			font-size: 16px;
+		 }
+		.Next {
+		  opacity: 0.6;
+		  cursor: not-allowed;
+		}
     </style>
 	
 	<div id = "nav">
 		<button onclick="window.location.href='./ElectricityGeneration.html';">Previous</button>
+		<button class="button Next">Next</button>
 	</div>
 	
-	<p>Currently Operating Reactors</p>
+	<center><h2>Currently Operating Reactors</h2></center>
 	<center><div id="reactors_today"></div></center>
 	
 	<script>

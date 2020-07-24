@@ -5,15 +5,38 @@
 <body onload='init()'>
 	<style>
          body { font-family: Arial; }
+		 button {
+			background-color: #46b47d; 
+			border: none;
+			color: white;
+			padding: 15px 32px;
+			text-align: center;
+			text-decoration: none;
+			display: inline-block;
+			font-size: 16px;
+		 }
+		.Previous {
+		  opacity: 0.6;
+		  cursor: not-allowed;
+		}
+		.Constructed{
+			background-color: steelblue;
+		}
+		.Decommissioned{
+			background-color: #b44646;
+		}
     </style>
 	
 	<div id = "nav">
-		<button onclick="window.location.href='./ElectricityGeneration.html';">Next</button>
+		<button class="button Previous">Previous</button>
+		<button class="button Next" onclick="window.location.href='./ElectricityGeneration.html';">Next</button>		
 	</div>
 	
-	<p>Reactor Construction</p>
-	<button onclick="update(data, 'Commercial operation')">Constructed</button>
-	<button onclick="update(data, 'Closure')">Decomissioned</button>
+	<center><h2>Reactor Construction and Decommissioning</h2></center>
+	<center><div>
+	<button class="button Constructed" onclick="update(data, 'Commercial operation')">Constructed</button>
+	<button class="button Decommissioned" onclick="update(data, 'Closure')">Decommissioned</button>
+	</div></center>
 	<center><div id="operation_closure"></div></center>
 	
 	<script>
@@ -41,10 +64,9 @@
 			d['Commercial operation'] = d3.timeParse("%Y")(d['Commercial operation']);
 			d['Closure'] = d3.timeParse("%Y")(d['Closure']);
 		});
-		console.log(data)
 		
 		xdomain = [d3.timeParse("%Y")(1940), d3.timeParse("%Y")(2020)]; 
-		console.log(xdomain)
+
 		xs = d3.scaleTime().domain(xdomain).range([0, width]);	
 		
 		svg = d3.select("#operation_closure")
@@ -111,17 +133,14 @@
 	
 	function update(data, state){
 		if (state == "Closure") {
-			label = "Decomissioned: ";
-			color = "darkred";
+			label = "Decommissioned: ";
+			color = "#b44646";
 			} 
 		else {
 			label = "Entered Operation: ";
 			color = "steelblue"
 		};
-				
-		console.log(state)
-		console.log(label)
-		
+					
 		data = data.filter(function(d) {return d[state] != null;});
 
 		var histogram = d3.histogram()
