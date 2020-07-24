@@ -1,0 +1,224 @@
+<html>
+
+<script src='https://d3js.org/d3.v5.min.js'></script>
+
+<body onload='init()'>
+	<style>
+         body { font-family: Arial; }
+    </style>
+	
+	<div id = "nav">
+	<button onclick="window.location.href='./ReactorConstruction.html';">Previous</button>
+	<button onclick="window.location.href='./ReactorsToday.html';">Next</button>
+	</div>
+	
+	<p>Nulcear Electricity Generation</p>
+	<center><div id="viz_1"></div></center>
+	
+	<script>
+	async function init() {
+
+	var margin = 50;
+	var height = 700;
+	var width = 1000;
+
+	var svg = d3.select("#viz_1")
+		.append("svg")
+			.attr("width", width + 2*margin)
+			.attr("height", height + 2*margin)
+		.append("g")
+			.attr("transform","translate("+margin+","+margin+")");
+
+	const data = await d3.csv("./Nuclear Electricity Net Generation and Share.csv");
+	data.forEach( function(d) {
+	 d['Annual Total'] = d3.timeParse("%Y")(d['Annual Total']);
+	 d['Nuclear Electricity Net Generation (Million Kilowatthours)'] = +d['Nuclear Electricity Net Generation (Million Kilowatthours)'];
+	 d['Nuclear Share of Electricity Net Generation (Percent)'] = +d['Nuclear Share of Electricity Net Generation (Percent)'];
+	});
+	console.log(data)
+
+	xdomain = d3.extent(data, function(d) {return d['Annual Total'];}); 
+	Gendomain = [0, d3.max(data, function(d) {return d['Nuclear Electricity Net Generation (Million Kilowatthours)'];})]; 
+	Percentdomain = [0, d3.max(data, function(d) {return d['Nuclear Share of Electricity Net Generation (Percent)'];})];
+
+	xs = d3.scaleTime().domain(xdomain).range([0, width]);
+	Gens = d3.scaleLinear().domain(Gendomain).range([height,0]);
+	Percents = d3.scaleLinear().domain(Percentdomain).range([height,0]);
+
+	xAxis = d3.axisBottom(xs).tickFormat(d3.timeFormat("%Y"));
+
+	svg.append("path")
+	  .datum(data)
+	  .attr("fill", "none")
+	  .attr("stroke", "steelblue")
+	  .attr("stroke-width", 1.5)
+	  .attr("d", d3.line()
+		.x(function(d) {return xs(d['Annual Total']); })
+		.y(function(d) {return Gens(d['Nuclear Electricity Net Generation (Million Kilowatthours)']); })
+		);
+		
+	svg.append("path")
+	  .datum(data)
+	  .attr("fill", "none")
+	  .attr("stroke", "darkorange")
+	  .attr("stroke-width", 1.5)
+	  .attr("d", d3.line()
+		.x(function(d) {return xs(d['Annual Total']); })
+		.y(function(d) {return Percents(d['Nuclear Share of Electricity Net Generation (Percent)']); })
+		)
+		
+	svg.append("g")
+	  .attr("transform","translate("+width+",0)")
+	  .call(d3.axisRight(Gens))
+	  .selectAll("text")
+		.style("font-size", 11)
+		.style("fill", "black");
+	svg.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", width - margin)
+      .attr("x",0 - (height / 2))
+      .attr("dy", "1em")
+      .style("text-anchor", "middle")
+      .text("Nuclear Electricity Net Generation (Million Kilowatthours)");
+
+	svg.append("g")
+	.call(d3.axisLeft(Percents))
+	.selectAll("text")
+		.style("font-size", 11)
+		.style("fill", "black");
+	svg.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 0 - margin)
+      .attr("x",0 - (height / 2))
+      .attr("dy", "1em")
+      .style("text-anchor", "middle")
+      .text("Nuclear Share of Electricity Net Generation (Percent)");
+
+	svg.append("g")
+	  .attr("transform","translate(0,"+height+")")
+	  .call(xAxis)
+	  .selectAll("text")
+		.style("font-size", 11)
+		.style("fill", "black");
+	svg.append("text")
+      .attr("y", height + margin/2)
+      .attr("x",width/2)
+      .attr("dy", "1em")
+      .style("text-anchor", "middle")
+      .text("Year");
+
+	var gen_guideline = svg.append("line")
+		.style("stroke", "steelblue")
+		.style("stroke-width", 0)
+		.style("stroke-dasharray","5,5")
+		.attr("x1", 0)
+		.attr("y1", 0)
+		.attr("x2", 200)
+		.attr("y2", 200);
+		
+	var per_guideline = svg.append("line")
+		.style("stroke", "darkorange")
+		.style("stroke-width", 0)
+		.style("stroke-dasharray","5,5")
+		.attr("x1", 0)
+		.attr("y1", 0)
+		.attr("x2", 200)
+		.attr("y2", 200);
+		
+	var year_guideline = svg.append("line")
+		.style("stroke", "black")
+		.style("stroke-width", 0)
+		.style("stroke-dasharray","5,5")
+		.attr("x1", 0)
+		.attr("y1", 0)
+		.attr("x2", 200)
+		.attr("y2", 200);
+	
+	var Tooltip = d3.select("#viz_1")
+		.append("div")
+		.style("opacity", 0)
+		.attr("class", "tooltip")
+		.style("position", "absolute")
+		.style("background-color", "white")
+		.style("border", "solid")
+		.style("border-width", "2px")
+		.style("border-radius", "5px")
+		.style("text-align", "left")
+		.style("padding", "5px");
+
+	var mouseover = function(d) {
+		console.log("mouseover")
+		var year_format = d3.timeFormat("%Y")
+		var html = "Year: " + year_format(d['Annual Total']) + "</br>" 
+			+ "Net Generation: " + d['Nuclear Electricity Net Generation (Million Kilowatthours)'] + " Million kWh" + "</br>" 
+			+ "Share: " + d['Nuclear Share of Electricity Net Generation (Percent)'] + "%";	
+		Tooltip
+		  .style("opacity", 1)
+		  .html(html)
+		  .style("left", (d3.event.pageX + 15) + "px")
+		  .style("top", (d3.event.pageY - 100) + "px");
+		d3.select(this)
+		  .style("stroke", "black")
+		  .style("opacity", 1);
+		gen_guideline
+		  .style("stroke-width", 2)
+		  .attr("x1", xs(d['Annual Total']))
+		  .attr("y1", Gens(d['Nuclear Electricity Net Generation (Million Kilowatthours)']))
+		  .attr("x2", width)
+		  .attr("y2", Gens(d['Nuclear Electricity Net Generation (Million Kilowatthours)']));
+		per_guideline
+		  .style("stroke-width", 2)
+		  .attr("x1", xs(d['Annual Total']))
+		  .attr("y1", Percents(d['Nuclear Share of Electricity Net Generation (Percent)']))
+		  .attr("x2", 0)
+		  .attr("y2", Percents(d['Nuclear Share of Electricity Net Generation (Percent)']));
+		year_guideline
+		  .style("stroke-width", 1)
+		  .attr("x1", xs(d['Annual Total']))
+		  .attr("y1", 0)
+		  .attr("x2", xs(d['Annual Total']))
+		  .attr("y2", height);
+	}
+
+	var mouseout = function(d) {
+		Tooltip
+			.style("left", width + "px")
+			.style("top", 0 + "px")
+			.style("opacity", 0);
+		d3.select(this)
+		  .style("stroke", "white")
+		  .style("opacity", 0.3);
+		gen_guideline.style("stroke-width", 0);
+		per_guideline.style("stroke-width", 0);
+		year_guideline.style("stroke-width", 0);
+	}
+	   
+	svg.selectAll("GenDot")
+	  .data(data)
+	  .enter()
+	  .append("circle")
+		.attr("cx", function(d) {return xs(d['Annual Total']); } )
+		.attr("cy", function(d) {return Gens(d['Nuclear Electricity Net Generation (Million Kilowatthours)']); } )
+		.attr("r", 5)
+		.style("fill", "black")
+		.style("opacity", 0.3)
+		.style("stroke", "white")
+	  .on("mouseover", mouseover)
+	  .on("mouseout", mouseout);
+	  
+	svg.selectAll("PerDot")
+	  .data(data)
+	  .enter()
+	  .append("circle")
+		.attr("cx", function(d) {return xs(d['Annual Total']); } )
+		.attr("cy", function(d) {return Percents(d['Nuclear Share of Electricity Net Generation (Percent)']); } )
+		.attr("r", 5)
+		.style("fill", "black")
+		.style("opacity", 0.3)
+		.style("stroke", "white")
+	  .on("mouseover", mouseover)
+	  .on("mouseout", mouseout);
+	}
+	</script>
+</body>
+</html>
