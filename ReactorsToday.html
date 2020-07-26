@@ -5,7 +5,7 @@
 
 <body onload='init()'>
 	<style>
-         body { font-family: Arial; }
+         body { font-family: Calibri; }
 		 button {
 			background-color: #46b47d; 
 			border: none;
@@ -20,11 +20,23 @@
 		  opacity: 0.6;
 		  cursor: not-allowed;
 		}
+		.p1{
+			position: relative;
+			left: 25%;
+			width: 50%;
+			border: 3px solid #46b47d;
+		}
     </style>
 	
-	<div id = "nav">
+	<center><div id = "nav">
 		<button onclick="window.location.href='./ElectricityGeneration.html';">Previous</button>
 		<button class="button Next">Next</button>
+	</div></center>
+	
+	<center><h1>Nuclear Reactors Today</h1></center>
+	<div class = "p1">
+		Today (with the decommissioning of Indian Point Unit #2 in early 2020) there are 96 operating nuclear reactor units in the United States. These plants have as many as 3 reactor units, each of which can range from 500MWe to a huge 1.5GWe in net generating capacity. </br></br>
+		Illinois has the most operating units of any state, with 11 units at 6 sites.  
 	</div>
 	
 	<center><h2>Currently Operating Reactors</h2></center>
@@ -79,6 +91,8 @@
 	.attr("class", "tooltip")
 	.style("opacity", 0)
 	.style("position", "absolute")
+	.style("left", 0 + "px")
+	.style("top", margin + "px")
 	.style("background-color", "white")
 	.style("border", "solid")
 	.style("border-width", "2px")
@@ -101,8 +115,8 @@
 	
 	var mouseout = function(d) {
 		Tooltip
-			.style("left", width + "px")
-			.style("top", 0 + "px")
+			.style("left", 0 + "px")
+			.style("top", margin + "px")
 			.style("opacity", 0);
 		d3.select(this)
 		  .style("stroke", "white")
@@ -133,40 +147,40 @@
 	// Credit: https://www.d3-graph-gallery.com/graph/bubblemap_template.html
 	
 	var valuesToShow = [500,2000,4000]
-	var xCircle = 40
-	var xLabel = 90
+	var xCircle = width / 2 
+	var xLabel = width / 2 + 50 
 	svg
 	.selectAll("legend")
 	.data(valuesToShow)
 	.enter()
 	.append("circle")
 	  .attr("cx", xCircle)
-	  .attr("cy", function(d){ return height - circle_scale(d) } )
+	  .attr("cy", function(d){ return  margin - circle_scale(d) } )
 	  .attr("r", function(d){ return circle_scale(d) })
 	  .style("fill", "none")
 	  .attr("stroke", "black")
 
 	// Add legend: segments
-	svg.append("g")
+	svg
 	.selectAll("legend")
 	.data(valuesToShow)
 	.enter()
 	.append("line")
 	  .attr('x1', function(d){ return xCircle + circle_scale(d) } )
 	  .attr('x2', xLabel)
-	  .attr('y1', function(d){ return height - circle_scale(d) } )
-	  .attr('y2', function(d){ return height - circle_scale(d) } )
+	  .attr('y1', function(d){ return   margin - circle_scale(d) } )
+	  .attr('y2', function(d){ return  margin - circle_scale(d) } )
 	  .attr('stroke', 'black')
 	  .style('stroke-dasharray', ('2,2'))
 
 	// Add legend: labels
-	svg.append("g")
+	svg
 	.selectAll("legend")
 	.data(valuesToShow)
 	.enter()
 	.append("text")
 	  .attr('x', xLabel)
-	  .attr('y', function(d){ return height - circle_scale(d) } )
+	  .attr('y', function(d){ return  margin - circle_scale(d) } )
 	  .text( function(d){ return d + " MWe"} )
 	  .style("font-size", 10)
 	  .attr('alignment-baseline', 'middle')

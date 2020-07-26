@@ -4,7 +4,7 @@
 
 <body onload='init()'>
 	<style>
-         body { font-family: Arial; }
+         body { font-family: Calibri; }
 		 button {
 			background-color: #46b47d; 
 			border: none;
@@ -15,23 +15,32 @@
 			display: inline-block;
 			font-size: 16px;
 		 }
-		.Previous {
-		  opacity: 0.6;
-		  cursor: not-allowed;
-		}
 		.Constructed{
 			background-color: steelblue;
 		}
 		.Decommissioned{
 			background-color: #b44646;
 		}
+		.p1{
+			position: relative;
+			left: 25%;
+			width: 50%;
+			border: 3px solid #46b47d;
+		}
     </style>
 	
-	<div id = "nav">
-		<button class="button Previous">Previous</button>
+	<center><div id = "nav">
+		<button class="button Previous" onclick="window.location.href='./NarrativeVisualization.html';">Previous</button>
 		<button class="button Next" onclick="window.location.href='./ElectricityGeneration.html';">Next</button>		
-	</div>
+	</div></center>
 	
+	<center><h1>The Birth and Rise of Commercial Nuclear Reactors</h1></center>
+	<div class = "p1">
+		In 1942 the first man-made self-sustaining fission nuclear reaction was initiated in the experimental Chicago Pile-1. This marked the beginning of nuclear power generation in the USA which continues to serve as a major source of electrical power to this day. </br></br>
+		In 1957 the Sodium Reactor Experiment became the first nuclear reactor in the USA to produce electrical power for a commercial power grid. Along with 3 other reactors completed in 1957, this was the beginning of commercial nuclear power generation.</br></br>
+		Through the 1990s the USA built many commercial nuclear reactors. Additionally, as some reactors reach the end of their lifespan (or fail) they are decommissioned. With the slowdown in construction and little in the way of future planned projects, it's tempting to think of nuclear power as approaching the end of its life. But, as we will see, it still plays an integral part of the electrical power supply in the United States.
+	</div>
+
 	<center><h2>Reactor Construction and Decommissioning</h2></center>
 	<center><div>
 	<button class="button Constructed" onclick="update(data, 'Commercial operation')">Constructed</button>
@@ -52,12 +61,16 @@
 		y.domain([0, 11]); 
 	
 	var svg;
+	var no_con_ann;
+	var no_con_ann_line_1;
+	var no_con_ann_line_2;
+	var cp1_ann;
+	var cp1_line;
 	var Tooltip;
 	var label;
 	var mouseover;
 	var mouseout;
-	
-	
+		
 	async function init() {
 		data = await d3.csv("./StartAndClosure.csv");
 		data.forEach( function(d) {
@@ -97,6 +110,8 @@
 			.style("opacity", 0)
 			.attr("class", "tooltip")
 			.style("position", "absolute")
+			.style("left", 0 + "px")
+			.style("top", 100 + "px")
 			.style("background-color", "white")
 			.style("border", "solid")
 			.style("border-width", "2px")
@@ -119,8 +134,8 @@
 		
 		mouseout = function(d) {
 			Tooltip
-				.style("left", width + "px")
-				.style("top", 0 + "px")
+				.style("left", 0 + "px")
+				.style("top", margin + "px")
 				.style("opacity", 0);
 			d3.select(this)
 			  .style("stroke", "white")
@@ -128,17 +143,57 @@
 			  .style("fill", color);
 		};
 		
+		cp1_ann = svg.append("text")
+			.attr("x", xs(d3.timeParse("%Y")(1944)) + "px")
+			.attr("y", y(2) + "px")
+			.text("CP-1 Reaction");
+			
+		cp1_line = svg.append("line")
+			.attr("x1", xs(d3.timeParse("%Y")(1941)))
+			.attr("y1", y(0))
+			.attr("x2", xs(d3.timeParse("%Y")(1944)))
+			.attr("y2", y(2))
+			.attr('stroke', 'black')
+			.style("stroke-dasharray", ('2,2'));
+		
 		update(data, 'Commercial operation');	
+	}
+	
+	function add_annotation(){
+		no_con_ann = svg.append("text")
+			.attr("x", xs(d3.timeParse("%Y")(1993)) + "px")
+			.attr("y", y(2) + "px")
+			.text("No new reactors came online between 1996 and 2016");
+		
+		no_con_ann_line_1 = svg.append("line")
+			.attr("x1", xs(d3.timeParse("%Y")(1997)))
+			.attr("y1", y(0.5))
+			.attr("x2", xs(d3.timeParse("%Y")(2016)))
+			.attr("y2", y(0.5))
+			.attr('stroke', 'black')
+			.style("stroke-dasharray", ('2,2'));
+			
+		no_con_ann_line_2 = svg.append("line")
+			.attr("x1", xs(d3.timeParse("%Y")(2006)))
+			.attr("y1", y(0.5))
+			.attr("x2", xs(d3.timeParse("%Y")(2006)))
+			.attr("y2", y(2))
+			.attr('stroke', 'black')
+			.style("stroke-dasharray", ('2,2'));
 	}
 	
 	function update(data, state){
 		if (state == "Closure") {
 			label = "Decommissioned: ";
 			color = "#b44646";
+			no_con_ann.remove();
+			no_con_ann_line_1.remove();
+			no_con_ann_line_2.remove();
 			} 
 		else {
 			label = "Entered Operation: ";
 			color = "steelblue"
+			add_annotation();
 		};
 					
 		data = data.filter(function(d) {return d[state] != null;});
