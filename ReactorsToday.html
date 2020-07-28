@@ -1,12 +1,9 @@
+<!DOCTYPE html>
 <html>
-
-<script src='https://d3js.org/d3.v5.min.js'></script>
-<script src="https://d3js.org/topojson.v1.min.js"></script>
-
-<body onload='init()'>
-	<style>
+<head>
+		<style>
          body { font-family: Calibri; }
-		 button {
+		 .button {
 			background-color: #46b47d; 
 			border: none;
 			color: white;
@@ -15,6 +12,10 @@
 			text-decoration: none;
 			display: inline-block;
 			font-size: 16px;
+			transition-duration: 0.2s;
+		 }
+		 .button:hover {
+			border: 2px black;
 		 }
 		.Next {
 		  opacity: 0.6;
@@ -27,9 +28,15 @@
 			border: 3px solid #46b47d;
 		}
     </style>
+</head>
+
+<script src='https://d3js.org/d3.v5.min.js'></script>
+
+<body onload='init()'>
+
 	
 	<center><div id = "nav">
-		<button onclick="window.location.href='./ElectricityGeneration.html';">Previous</button>
+		<button class="button Previous" onclick="window.location.href='./ElectricityGeneration.html';">Previous</button>
 		<button class="button Next">Next</button>
 	</div></center>
 	
@@ -68,7 +75,6 @@
 	console.log(states)
 	
 	// Map
-	// Credit: http://bl.ocks.org/michellechandra/0b2ce4923dc9b5809922
 	var projection = d3.geoAlbersUsa()
 					   .translate([width/2, height/2])    
 					   .scale([1500]);          
@@ -144,7 +150,6 @@
 		.on("mouseout", mouseout);
 		
 	// Legend
-	// Credit: https://www.d3-graph-gallery.com/graph/bubblemap_template.html
 	
 	var valuesToShow = [500,2000,4000]
 	var xCircle = width / 2 
