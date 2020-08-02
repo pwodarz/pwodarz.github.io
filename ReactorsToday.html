@@ -190,7 +190,30 @@
 	  .style("font-size", 10)
 	  .attr('alignment-baseline', 'middle')
 
+	// Annotation
+	svg
+	.selectAll("annotation")
+	.data(data)
+	.enter()
+	.append("line")
+	  .attr('x1', function(d) {return projection([-112.865, 33.38916667])[0]; })
+	  .attr('x2', function(d) {return projection([-112.865, 33.38916667])[0]; })
+	  .attr('y1', function(d) {return projection([-112.865, 33.38916667])[1]; })
+	  .attr('y2', function(d) {return projection([-112.865, 33.38916667])[1] - 50; })
+	  .attr('stroke', 'black')
+	  .style('stroke-dasharray', ('2,2'))
+	
+	svg
+	.selectAll("annotation")
+	.data(data)
+	.enter()
+	.append("text")
+		.attr('x', function(d) {return projection([-112.865, 33.38916667])[0] - 100; })
+		.attr('y', function(d) {return projection([-112.865, 33.38916667])[1] - 55; })
+		.text("Largest plant operating today (Palo Verde)")
 	}
+	
+	
 	</script>
 </body>
 
