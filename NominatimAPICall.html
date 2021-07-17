@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+
+<h1>Enter Latitude and Longitude</h1>
+<div id ="formdiv" >
+<form name=form action="#">
+  <label for="lat">Latitude:</label>
+  <input type="number" id="lat" name="lat"><br><br>
+  <label for="lon">Longitude:</label>
+  <input type="number" id="lon" name="lon"><br><br>
+  <input id ="myLoc" type="button" onclick="return useMyLoc(form);" value="Use My Location">
+  <input id ="submit" type="button" onclick="return addressLookup(form);" value="Submit">
+</form>
+
+<p id="address"></p>
+</div>
+<div id="mapdiv" style="width: 500px; height: 500px;"></div>
+
+<script src="http://www.openlayers.org/api/OpenLayers.js"></script>
+<script>
+async function nominatimLookup(lat,lon){
+	const NOMINATIMAPI_API_URL = 'https://nominatim.openstreetmap.org/reverse?';
+	const NOMINATIMAPI_REQUEST_PARAMS = {
+		'lat': lat,
+		'lon': lon,
+		'format': 'jsonv2'
+	};
+	const response = await fetch(NOMINATIMAPI_API_URL + new URLSearchParams(NOMINATIMAPI_REQUEST_PARAMS));
+	const json = await response.json();
+	console.log(json);
+	return json;
+}
+
+async function addressLookup(form) {
+	document.getElementById("mapdiv").innerHTML = "";
+	document.getElementById('submit').disabled=true;
+	document.getElementById('submit').value="working...";
+	lat = form.lat.value;
+	lon = form.lon.value;
+	if(Math.abs(lat) > 90 || Math.abs(lon) > 90){
+	document.getElementById("address").innerHTML = "Invalid latitude or longitude";
+		document.getElementById('submit').disabled=false;
+		document.getElementById('submit').value="submit";
+		return false;
+	};
+	json = await nominatimLookup(lat,lon);
+	if(json.error != null){
+		document.getElementById("address").innerHTML = "Unable to reverse geocode location";
+		document.getElementById('submit').disabled=false;
+		document.getElementById('submit').value="submit";
+		return false;
+	}
+	else{
+		document.getElementById("address").innerHTML = JSON.stringify(json.address, null, "<br />");
+		document.getElementById('submit').disabled=false;
+		document.getElementById('submit').value="submit";
+		
+		map = new OpenLayers.Map("mapdiv");
+		map.addLayer(new OpenLayers.Layer.OSM());
+
+		var lonLat = new OpenLayers.LonLat(lon, lat)
+			  .transform(
+				new OpenLayers.Projection("EPSG:4326"), // transform from WGS 1984
+				map.getProjectionObject() // to Spherical Mercator Projection
+			  );
+			  
+		var zoom=15;
+
+		var markers = new OpenLayers.Layer.Markers( "Markers" );
+		map.addLayer(markers);
+		
+		markers.addMarker(new OpenLayers.Marker(lonLat));
+		
+		map.setCenter (lonLat, zoom);
+	};
+	
+	return false;
+};
+
+function useMyLoc(form) {
+	if (navigator.geolocation) {
+		navigator.geolocation.getCurrentPosition(enterPosition);
+	} 
+	else {
+		document.getElementById("address").innerHTML = "Location access blocked or unsupported";
+	};
+};
+
+function enterPosition(position){
+	document.getElementById("lat").value = position.coords.latitude;
+	document.getElementById("lon").value = position.coords.longitude;
+};
+</script>
+
+</body>
+</html>
