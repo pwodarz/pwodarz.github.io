@@ -26,6 +26,7 @@ async function nominatimLookup(lat,lon){
 	const NOMINATIMAPI_REQUEST_PARAMS = {
 		'lat': lat,
 		'lon': lon,
+		'zoom': 21,
 		'format': 'jsonv2'
 	};
 	const response = await fetch(NOMINATIMAPI_API_URL + new URLSearchParams(NOMINATIMAPI_REQUEST_PARAMS));
