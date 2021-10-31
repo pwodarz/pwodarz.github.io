@@ -56,7 +56,7 @@ async function addressLookup(form) {
 		return false;
 	}
 	else{
-		document.getElementById("address").innerHTML = JSON.stringify(json.address, null, "<br />").replace(/["{}]/g,'');
+		document.getElementById("address").innerHTML = JSON.stringify(json.address, null, "<br />").replace(/["{},]/g,'');
 		document.getElementById('submit').disabled=false;
 		document.getElementById('submit').value="submit";
 		
