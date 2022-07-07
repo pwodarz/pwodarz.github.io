@@ -2,23 +2,61 @@
 <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <html>
+<head>
+<style>
+html * {
+	font-family: 'Helvetica';
+}
+
+.p-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 500px));
+  align-items: flex-start;
+}
+
+.p-container .card {
+  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+  transition: 0.3s;
+  border-radius: 5px;
+  margin: 10px;
+}
+
+.p-container .card:hover {
+  box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+}
+
+.p-container .card .content{
+	margin: 1vw 1vw 1vw 1vw;
+}
+
+</style>
+</head>
 
 <body>
-
-<h1>Enter Latitude and Longitude</h1>
-<div id ="formdiv" >
-<form name=form action="#">
-  <label for="lat">Latitude:</label>
-  <input type="number" id="lat" name="lat"><br><br>
-  <label for="lon">Longitude:</label>
-  <input type="number" id="lon" name="lon"><br><br>
-  <input id ="myLoc" type="button" onclick="return useMyLoc(form);" value="Use My Location">
-  <input id ="submit" type="button" onclick="return addressLookup(form);" value="Submit">
-</form>
-
-<p id="address"></p>
+<h1>Reverse Geocoder</h1>
+<div class="p-container">
+		<div class = "card">
+			<div class = "content">
+			<h2>Enter Latitude and Longitude</h2>
+			<div id ="formdiv" >
+			<form name=form action="#">
+			<label for="lat">Latitude:</label>
+			<input type="number" id="lat" name="lat"><br><br>
+			<label for="lon">Longitude:</label>
+			<input type="number" id="lon" name="lon"><br><br>
+			<input id ="myLoc" type="button" onclick="return useMyLoc(form);" value="Use My Location">
+			<input id ="submit" type="button" onclick="return addressLookup(form);" value="Submit">
+			</form>
+			</div>
+			</div>
+		</div>
+		<div class = "card" id = 'address-card' hidden>
+			<p id="address"></p>
+		</div>
+		<div class = "card" id = 'mapdiv-card' hidden>
+			<div id="mapdiv" style="width: 500px; height: 500px;"></div>
+		</div>
 </div>
-<div id="mapdiv" style="width: 500px; height: 500px;"></div>
 
 <script src="https://www.openlayers.org/api/OpenLayers.js"></script>
 <script>
@@ -40,6 +78,7 @@ async function addressLookup(form) {
 	document.getElementById("mapdiv").innerHTML = "";
 	document.getElementById('submit').disabled=true;
 	document.getElementById('submit').value="working...";
+	document.getElementById("address-card").style.display = 'block';
 	lat = form.lat.value;
 	lon = form.lon.value;
 	if(Math.abs(lat) > 90 || Math.abs(lon) > 180){
@@ -72,6 +111,7 @@ async function addressLookup(form) {
 		map.addLayer(markers);
 		markers.addMarker(new OpenLayers.Marker(lonLat));
 		map.setCenter (lonLat, zoom);
+		document.getElementById("mapdiv-card").style.display = 'block';
 	};
 	
 	return false;
