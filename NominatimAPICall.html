@@ -42,7 +42,7 @@ async function addressLookup(form) {
 	document.getElementById('submit').value="working...";
 	lat = form.lat.value;
 	lon = form.lon.value;
-	if(Math.abs(lat) > 90 || Math.abs(lon) > 90){
+	if(Math.abs(lat) > 90 || Math.abs(lon) > 180){
 	document.getElementById("address").innerHTML = "Invalid latitude or longitude";
 		document.getElementById('submit').disabled=false;
 		document.getElementById('submit').value="submit";
