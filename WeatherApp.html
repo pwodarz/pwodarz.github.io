@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<html>
+<head>
+<style>
+html * {
+	font-family: 'Helvetica';
+}
+
+.p-container {
+  display: grid;
+  grid: minmax(400px, min-content);
+  align-items: flex-start;
+}
+
+.p-container .card {
+  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+  transition: 0.3s;
+  border-radius: 5px;
+  margin: 10px;
+}
+
+.p-container .card:hover {
+  box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+}
+
+.p-container .card .content{
+	margin: 1vw 1vw 1vw 1vw;
+}
+
+
+.p-container .card .content .collcontent{
+  display: none;
+  width: 100%;
+  height: 200px;
+}
+
+
+
+
+</style>
+</head>
+
+<body>
+<h1>Weather</h1>
+<div class = "card" id = 'search-form'>
+    <div class = "card">
+        <div class = "content">
+        <div id ="formdiv" >
+        <form name=form action="#">
+        <input type="string" id="locsearch" name="locsearch">
+        <input id ="submit" type="button" onclick="return searchAddress(form);" value="Search">
+        <input id ="myLoc" type="button" onclick="return useMyLoc();" value="Use My Location">
+        </form>
+        </div>
+        </div>
+    </div>
+</div>
+<div class = "card" id = 'address-list'>
+</div>
+<div class = "card" id = 'address-card' hidden>
+    <div class = "content">
+    <p id="address"></p>
+    </div>
+</div>
+<div class="p-container", id = "p-container">
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.3.0/chart.umd.min.js"></script>
+
+<script>
+
+async function nominatimLookup(query){
+	const NOMINATIMAPI_API_URL = 'https://nominatim.openstreetmap.org/search?';
+	const NOMINATIMAPI_REQUEST_PARAMS = {
+		'q': query,
+        'format' : "jsonv2",
+        'limit' : 5,
+        'countrycodes' : "US"
+	};
+	const response = await fetch(NOMINATIMAPI_API_URL + new URLSearchParams(NOMINATIMAPI_REQUEST_PARAMS));
+	const json = await response.json();
+	return json;
+}
+
+function createDataChart(ctx, id, type, title, xData, yData){
+    const myChart = new Chart(ctx, {
+            type: type,
+            data: {
+                labels: xData,
+                datasets: [{data: yData}]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: title,
+                    }
+                },
+                scales: {
+                    y: {
+                        min: type=="bar" ? 0 : (Math.min(...yData) - 5),
+                        max: title=="Precipitation Probability" ? 100: (Math.max(...yData) + 5)
+                    }
+                },
+                responsive: true,
+                maintainAspectRatio: false
+            }
+         });
+    return myChart;
+}
+
+async function weatherLookup(lat,lon){
+	const WEATHER_API_URL = 'https://api.weather.gov/points/';
+	const WEATHER_REQUEST_PARAMS = lat + ',' + lon;
+	const weatherrequest = await fetch(WEATHER_API_URL + WEATHER_REQUEST_PARAMS);
+	const weatherresponse = await weatherrequest.json();
+	console.log(weatherresponse);
+    if(weatherresponse.status == "404"){
+		return [weatherresponse];
+	};
+    console.log(weatherresponse.properties.forecastHourly);
+    const forecasthourlyrequest = await fetch(weatherresponse.properties.forecastHourly);
+    const forecasthourly = await forecasthourlyrequest.json();
+    console.log(weatherresponse, forecasthourly);
+    const forecastrequest = await fetch(weatherresponse.properties.forecast);
+    const forecast = await forecastrequest.json();
+    console.log(weatherresponse, forecasthourly);
+	return [weatherresponse, forecasthourly, forecast];
+}
+
+async function addressLookup(coords) {
+    document.getElementById("p-container").replaceChildren();
+	document.getElementById('submit').disabled=true;
+	document.getElementById('submit').value="working...";
+	document.getElementById("address-card").style.display = 'block';
+	lat = coords[0];
+	lon = coords[1];
+	response = await weatherLookup(lat,lon);
+    if(response[0].status == "404"){
+		document.getElementById("address").innerHTML = "Invalid/Non-U.S.A. location";
+		document.getElementById('submit').disabled=false;
+		document.getElementById('submit').value="Search";
+        document.getElementById('p-container').innerHTML = '';
+		return false;
+	};
+    document.getElementById("address").innerHTML = "Location: " + JSON.stringify(response[0].properties.relativeLocation.properties.city, null, "<br />").replace(/["{},]/g,'') 
+    + ', ' + JSON.stringify(response[0].properties.relativeLocation.properties.state, null, "<br />").replace(/["{},]/g,'');
+    document.getElementById('submit').disabled=false;
+    document.getElementById('submit').value="Search";
+
+
+    function groupByDate(periods) {
+        const groupedPeriods = {};
+        periods.forEach(period => {
+            const date = period.startTime.split('T')[0];
+            if (!groupedPeriods[date]) {
+            groupedPeriods[date] = [];
+            }
+            groupedPeriods[date].push(period);
+        });
+        return groupedPeriods;
+    };
+
+    var groupedDays = groupByDate(response[1].properties.periods);
+    console.log(groupedDays);
+
+    var groupedSumForecastDays = groupByDate(response[2].properties.periods);
+    console.log(groupedSumForecastDays);
+
+    dayOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+
+	for (var i in groupedSumForecastDays){
+         n = document.createElement('div');
+         n.className = 'card';
+         document.getElementById("p-container").appendChild(n);
+         n.id = i;
+         g = document.createElement('div');
+         g.className = 'content';
+         g.id = n.id + '.' + n.id;
+         g.innerHTML = dayOfWeek[new Date(Date.parse(i)).getDay()] + '<br> ' + i 
+         + '<br> ' + groupedSumForecastDays[i][0].shortForecast
+         + '<br> High: ' + groupedSumForecastDays[i][0].temperature + groupedSumForecastDays[i][0].temperatureUnit
+         + ' Low: ' + groupedSumForecastDays[i][groupedSumForecastDays[i].length - 1].temperature + groupedSumForecastDays[i][groupedSumForecastDays[i].length - 1].temperatureUnit;
+         document.getElementById(n.id).appendChild(g);
+
+         
+         startTimeValues = groupedDays[i].map(period => new Date(Date.parse(period.startTime)).getHours());
+         temperatureValues = groupedDays[i].map(period => period.temperature);
+         windValues = groupedDays[i].map(period => period.windSpeed.split(" ")[0]);
+         precipValues = groupedDays[i].map(period => period.probabilityOfPrecipitation.value);
+         console.log(windValues);
+         console.log(precipValues);
+
+         var tempcontent = document.createElement('div');
+         tempcontent.className = 'collcontent';
+         tempcontent.innerHTML += "<canvas id='" + i + "temp'></canvas>";
+         document.getElementById(g.id).appendChild(tempcontent);
+         var precipcontent = document.createElement('div');
+         precipcontent.className = 'collcontent';
+         precipcontent.innerHTML += "<canvas id='" + i + "precip'></canvas>";
+         document.getElementById(g.id).appendChild(precipcontent);
+         var windcontent = document.createElement('div');
+         windcontent.className = 'collcontent';
+         windcontent.innerHTML += "<canvas id='" + i + "wind'></canvas>";
+         document.getElementById(g.id).appendChild(windcontent);
+
+         ctx = document.getElementById(i+"temp").getContext('2d');
+         const tempChart = createDataChart(ctx, i, "line", "Temperature", startTimeValues, temperatureValues);
+
+
+         ctx = document.getElementById(i+"precip").getContext('2d');
+         const precpChart = createDataChart(ctx, i, "bar", "Precipitation Probability", startTimeValues, precipValues);
+
+         ctx = document.getElementById(i+"wind").getContext('2d');
+         const windChart = createDataChart(ctx, i, "bar", "Wind Speed", startTimeValues, windValues);
+
+     };
+
+    
+     document.querySelectorAll('.card').forEach(contentdiv => {
+        contentdiv.addEventListener('click', function() {
+            this.classList.toggle('active');
+            const matches = this.querySelectorAll('.collcontent');
+            matches.forEach((i) => {
+                const computedStyle = getComputedStyle(i);
+                if (computedStyle.display === 'none') {
+                    i.style.display = 'block';
+                    } else {
+                    i.style.display = 'none';
+                }
+            });
+        });
+    });
+
+
+	return false;
+};
+
+
+
+async function searchAddress(form) {
+    document.getElementById('address-list').replaceChildren();
+    document.getElementById('submit').disabled = true;
+    document.getElementById('submit').value = "working...";
+
+    json = await nominatimLookup(form.locsearch.value);
+    console.log(json);
+    if (json.error != null) {
+        document.getElementById("address").innerHTML = "Unable to search location";
+        document.getElementById('submit').disabled = false;
+        document.getElementById('submit').value = "Search";
+        return false;
+    } else {
+        for (f in json) {
+            console.log(json[f]);
+            console.log(json[f].display_name);
+            createAddressCard(json[f]);
+        }
+        document.getElementById('submit').disabled = false;
+        document.getElementById('submit').value = "Search";
+    }
+
+    return false;
+};
+
+function createAddressCard(feature) {
+    var n = document.createElement('div');
+    n.className = 'address-search';
+    console.log("feature");
+    console.log(feature);
+    n.addEventListener('click', function () {
+        document.querySelectorAll('.address-search').forEach(i => {i.style.backgroundColor = "";});
+        this.style.backgroundColor = 'lightblue';
+        useMyLoc([feature.lat, feature.lon]);
+    });
+    var m = document.createElement('div');
+    m.className = 'address-item';
+    m.innerHTML += feature.display_name;
+    n.appendChild(m);
+    document.getElementById("address-list").appendChild(n);
+    n.style.display = 'block';
+}
+
+
+const getLoc = async () => {
+    const pos = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject);
+    });
+
+    return [pos.coords.latitude,pos.coords.longitude];
+
+};
+
+
+async function useMyLoc(coords) {
+    if(coords == null){
+        coords = await getLoc();
+    }
+    console.log(coords);
+    document.getElementById("address-card").style.display = 'block';
+	document.getElementById("address").innerHTML = coords;
+    addressLookup(coords);
+};
+</script>
+
+</body>
