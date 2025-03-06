@@ -181,7 +181,7 @@ function displayWeatherData(dailyForecastData, hourlyForecastData) {
 
         // Set the card title as the day of the week and date
         const dateObj = new Date(date);
-        cardContent.innerHTML = `${dayOfWeek[dateObj.getDay()]}<br> ${date}<br> ${groupedDaily[date][0].shortForecast}
+        cardContent.innerHTML = `${dayOfWeek[dateObj.getDay()]} (${date}) <br> ${groupedDaily[date][0].shortForecast}
         <br> High: ${groupedDaily[date][0].temperature} ${groupedDaily[date][0].temperatureUnit}
         Low: ${groupedDaily[date][groupedDaily[date].length - 1].temperature} ${groupedDaily[date][groupedDaily[date].length - 1].temperatureUnit}`;
 
