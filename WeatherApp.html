@@ -1,312 +1,276 @@
 <!DOCTYPE html>
-<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<html>
+<html lang="en">
 <head>
-<style>
-html * {
-	font-family: 'Helvetica';
-}
-
-.p-container {
-  display: grid;
-  grid: minmax(400px, min-content);
-  align-items: flex-start;
-}
-
-.p-container .card {
-  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
-  transition: 0.3s;
-  border-radius: 5px;
-  margin: 10px;
-}
-
-.p-container .card:hover {
-  box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
-}
-
-.p-container .card .content{
-	margin: 1vw 1vw 1vw 1vw;
-}
-
-
-.p-container .card .content .collcontent{
-  display: none;
-  width: 100%;
-  height: 200px;
-}
-
-
-
-
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>U.S. Weather Example</title>
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.14.1/themes/base/jquery-ui.css">
+  <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+  <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.js"></script>
 </head>
-
+<style>
+  h1 {
+    text-align: center;
+  }
+  html * {
+    font-family: 'Helvetica';
+  }
+  .p-container {
+    display: grid;
+    grid: minmax(400px, min-content);
+    align-items: flex-start;
+  }
+  .p-container .card {
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+    transition: 0.3s;
+    border-radius: 5px;
+    margin: 10px;
+  }
+  .p-container .card:hover {
+    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+  }
+  .p-container .card .content{
+    margin: 1vw 1vw 1vw 1vw;
+  }
+  .p-container .card .content .collcontent{
+    display: none;
+    width: 100%;
+    height: 200px;
+  }  
+</style>
 <body>
-<h1>Weather</h1>
-<div class = "card" id = 'search-form'>
-    <div class = "card">
-        <div class = "content">
-        <div id ="formdiv" >
-        <form name=form action="#">
-        <input type="string" id="locsearch" name="locsearch">
-        <input id ="submit" type="button" onclick="return searchAddress(form);" value="Search">
-        <input id ="myLoc" type="button" onclick="return useMyLoc();" value="Use My Location">
-        </form>
-        </div>
-        </div>
-    </div>
+<h1>U.S. Weather</h1>
+<div class="ui-widget">
+  <label for="searchLocation">Location: </label>
+  <input id="searchLocation">
+  <input id ="myLocation" type="button" onclick="return useMyLoc();" value="Use My Location">
 </div>
-<div class = "card" id = 'address-list'>
-</div>
-<div class = "card" id = 'address-card' hidden>
-    <div class = "content">
-    <p id="address"></p>
-    </div>
-</div>
+<p id="weatherLocation"></p>
 <div class="p-container", id = "p-container">
 </div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.3.0/chart.umd.min.js"></script>
+</body>
+</html>
 
 <script>
+$(function() {
+  $.getJSON("uscities.json", function(data) {
+    var availableLocations = data;
+    console.log(data);
 
-async function nominatimLookup(query){
-	const NOMINATIMAPI_API_URL = 'https://nominatim.openstreetmap.org/search?';
-	const NOMINATIMAPI_REQUEST_PARAMS = {
-		'q': query,
-        'format' : "jsonv2",
-        'limit' : 5,
-        'countrycodes' : "US"
-	};
-	const response = await fetch(NOMINATIMAPI_API_URL + new URLSearchParams(NOMINATIMAPI_REQUEST_PARAMS));
-	const json = await response.json();
-	return json;
-}
+    $( "#searchLocation" ).autocomplete({
+      minLength: 3,
+      source: function(request, response) {
+        var results = $.ui.autocomplete.filter(availableLocations, request.term);
+        response(results.slice(0, 20));
+      },
+      focus: function( event, ui ) {
+        $( "#project" ).val( ui.item.label );
+        return false;
+      },
+      select: function( event, ui ) {
+        $( "#searchLocation" ).val( ui.item.label );
+        $( "#weatherLocation" ).html( "Showing weather for: " + ui.item.label );
+        weatherLookup(ui.item.lat, ui.item.lng);
+        return false;
+      }
+    });
+  }).fail(function() {
+    console.error("Error loading JSON file");
+  });
+});
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.3.0/chart.umd.min.js"></script>
+<script>
 
-function createDataChart(ctx, id, type, title, xData, yData){
-    const myChart = new Chart(ctx, {
-            type: type,
-            data: {
-                labels: xData,
-                datasets: [{data: yData}]
+function useMyLoc() {
+  $( "#searchLocation" ).val( '' );
+  $( "#weatherLocation" ).html( "Showing weather for: your location");
+    if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+            function (position) {
+                // Success: Received coordinates
+                var latitude = position.coords.latitude;
+                var longitude = position.coords.longitude;
+                console.log("Latitude: " + latitude + ", Longitude: " + longitude);
+                // Do something with the coordinates
+                weatherLookup(latitude, longitude);
             },
-            options: {
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    title: {
-                        display: true,
-                        text: title,
-                    }
-                },
-                scales: {
-                    y: {
-                        min: type=="bar" ? 0 : (Math.min(...yData) - 5),
-                        max: title=="Precipitation Probability" ? 100: (Math.max(...yData) + 5)
-                    }
-                },
-                responsive: true,
-                maintainAspectRatio: false
+            function (error) {
+                // Error: Unable to retrieve coordinates
+                console.error("Error getting location: " + error.message);
+                // Handle error case
+                console.log("Handling location error: " + error.message);
             }
-         });
-    return myChart;
+        );
+    } else {
+        console.error("Geolocation is not supported by this browser.");
+        handleLocationError(new Error("Geolocation not supported"));
+    }
 }
 
-async function weatherLookup(lat,lon){
-	const WEATHER_API_URL = 'https://api.weather.gov/points/';
-	const WEATHER_REQUEST_PARAMS = lat + ',' + lon;
-	const weatherrequest = await fetch(WEATHER_API_URL + WEATHER_REQUEST_PARAMS);
-	const weatherresponse = await weatherrequest.json();
-	console.log(weatherresponse);
-    if(weatherresponse.status == "404"){
-		return [weatherresponse];
-	};
-    console.log(weatherresponse.properties.forecastHourly);
-    const forecasthourlyrequest = await fetch(weatherresponse.properties.forecastHourly);
-    const forecasthourly = await forecasthourlyrequest.json();
-    console.log(weatherresponse, forecasthourly);
-    const forecastrequest = await fetch(weatherresponse.properties.forecast);
-    const forecast = await forecastrequest.json();
-    console.log(weatherresponse, forecasthourly);
-	return [weatherresponse, forecasthourly, forecast];
-}
-
-async function addressLookup(coords) {
-    document.getElementById("p-container").replaceChildren();
-	document.getElementById('submit').disabled=true;
-	document.getElementById('submit').value="working...";
-	document.getElementById("address-card").style.display = 'block';
-	lat = coords[0];
-	lon = coords[1];
-	response = await weatherLookup(lat,lon);
-    if(response[0].status == "404"){
-		document.getElementById("address").innerHTML = "Invalid/Non-U.S.A. location";
-		document.getElementById('submit').disabled=false;
-		document.getElementById('submit').value="Search";
-        document.getElementById('p-container').innerHTML = '';
-		return false;
-	};
-    document.getElementById("address").innerHTML = "Location: " + JSON.stringify(response[0].properties.relativeLocation.properties.city, null, "<br />").replace(/["{},]/g,'') 
-    + ', ' + JSON.stringify(response[0].properties.relativeLocation.properties.state, null, "<br />").replace(/["{},]/g,'');
-    document.getElementById('submit').disabled=false;
-    document.getElementById('submit').value="Search";
-
-
-    function groupByDate(periods) {
-        const groupedPeriods = {};
-        periods.forEach(period => {
-            const date = period.startTime.split('T')[0];
-            if (!groupedPeriods[date]) {
-            groupedPeriods[date] = [];
-            }
-            groupedPeriods[date].push(period);
-        });
-        return groupedPeriods;
-    };
-
-    var groupedDays = groupByDate(response[1].properties.periods);
-    console.log(groupedDays);
-
-    var groupedSumForecastDays = groupByDate(response[2].properties.periods);
-    console.log(groupedSumForecastDays);
-
-    dayOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
-
-	for (var i in groupedSumForecastDays){
-         n = document.createElement('div');
-         n.className = 'card';
-         document.getElementById("p-container").appendChild(n);
-         n.id = i;
-         g = document.createElement('div');
-         g.className = 'content';
-         g.id = n.id + '.' + n.id;
-         g.innerHTML = dayOfWeek[new Date(Date.parse(i)).getDay()] + '<br> ' + i 
-         + '<br> ' + groupedSumForecastDays[i][0].shortForecast
-         + '<br> High: ' + groupedSumForecastDays[i][0].temperature + groupedSumForecastDays[i][0].temperatureUnit
-         + ' Low: ' + groupedSumForecastDays[i][groupedSumForecastDays[i].length - 1].temperature + groupedSumForecastDays[i][groupedSumForecastDays[i].length - 1].temperatureUnit;
-         document.getElementById(n.id).appendChild(g);
-
-         
-         startTimeValues = groupedDays[i].map(period => new Date(Date.parse(period.startTime)).getHours());
-         temperatureValues = groupedDays[i].map(period => period.temperature);
-         windValues = groupedDays[i].map(period => period.windSpeed.split(" ")[0]);
-         precipValues = groupedDays[i].map(period => period.probabilityOfPrecipitation.value);
-         console.log(windValues);
-         console.log(precipValues);
-
-         var tempcontent = document.createElement('div');
-         tempcontent.className = 'collcontent';
-         tempcontent.innerHTML += "<canvas id='" + i + "temp'></canvas>";
-         document.getElementById(g.id).appendChild(tempcontent);
-         var precipcontent = document.createElement('div');
-         precipcontent.className = 'collcontent';
-         precipcontent.innerHTML += "<canvas id='" + i + "precip'></canvas>";
-         document.getElementById(g.id).appendChild(precipcontent);
-         var windcontent = document.createElement('div');
-         windcontent.className = 'collcontent';
-         windcontent.innerHTML += "<canvas id='" + i + "wind'></canvas>";
-         document.getElementById(g.id).appendChild(windcontent);
-
-         ctx = document.getElementById(i+"temp").getContext('2d');
-         const tempChart = createDataChart(ctx, i, "line", "Temperature", startTimeValues, temperatureValues);
-
-
-         ctx = document.getElementById(i+"precip").getContext('2d');
-         const precpChart = createDataChart(ctx, i, "bar", "Precipitation Probability", startTimeValues, precipValues);
-
-         ctx = document.getElementById(i+"wind").getContext('2d');
-         const windChart = createDataChart(ctx, i, "bar", "Wind Speed", startTimeValues, windValues);
-
-     };
-
+async function weatherLookup(lat, lon) {
+    // Clear the previous weather data from the container
+    document.getElementById("p-container").innerHTML = '';
+    const WEATHER_API_URL = 'https://api.weather.gov/points/';
+    const WEATHER_REQUEST_PARAMS = lat + ',' + lon;
     
-     document.querySelectorAll('.card').forEach(contentdiv => {
-        contentdiv.addEventListener('click', function() {
+    try {
+        // Fetch the weather data for the given latitude and longitude
+        const weatherRequest = await fetch(WEATHER_API_URL + WEATHER_REQUEST_PARAMS);
+        
+        if (!weatherRequest.ok) {
+            throw new Error("Failed to fetch weather data");
+        }
+        
+        const weatherData = await weatherRequest.json();
+        console.log("Weather data:", weatherData);
+
+        // Check if the data has properties
+        if (weatherData.properties) {
+            const { forecast, forecastHourly } = weatherData.properties;
+
+            // Display the forecast data URLs
+            console.log("Forecast URL:", forecast);
+            console.log("Hourly Forecast URL:", forecastHourly);
+
+            // You can make further requests to get detailed forecasts if needed:
+            // For example, fetch the daily forecast:
+            const dailyForecastRequest = await fetch(forecast);
+            const dailyForecastData = await dailyForecastRequest.json();
+            console.log("Daily Forecast Data:", dailyForecastData);
+
+            // For hourly forecast:
+            const hourlyForecastRequest = await fetch(forecastHourly);
+            const hourlyForecastData = await hourlyForecastRequest.json();
+            console.log("Hourly Forecast Data:", hourlyForecastData);
+
+            // You can now pass the forecast data to a function to display it
+            $( "#weatherLocation" ).html( "Showing weather for: " + weatherData.properties.relativeLocation.properties.city + ", " + weatherData.properties.relativeLocation.properties.state);
+            displayWeatherData(dailyForecastData, hourlyForecastData);
+        } else {
+            throw new Error("Invalid response: Missing properties");
+        }
+        
+    } catch (error) {
+        console.error("Error fetching weather data:", error.message);
+    }
+}
+
+function displayWeatherData(dailyForecastData, hourlyForecastData) {
+    // Clear the previous weather data from the container
+    document.getElementById("p-container").innerHTML = '';
+
+    // Group the forecast data by date for both daily and hourly data
+    const groupedHourly = groupByDate(hourlyForecastData.properties.periods);
+    const groupedDaily = groupByDate(dailyForecastData.properties.periods);
+
+    // Days of the week for displaying
+    const dayOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+    // Loop through the grouped daily forecast data
+    for (let date in groupedDaily) {
+        // Create a new div for each date's forecast
+        const cardDiv = document.createElement('div');
+        cardDiv.className = 'card';
+        document.getElementById("p-container").appendChild(cardDiv);
+
+        // Create the content for each card
+        const cardContent = document.createElement('div');
+        cardContent.className = 'content';
+        cardDiv.appendChild(cardContent);
+
+        // Set the card title as the day of the week and date
+        const dateObj = new Date(date);
+        cardContent.innerHTML = `${dayOfWeek[dateObj.getDay()]}<br> ${date}<br> ${groupedDaily[date][0].shortForecast}
+        <br> High: ${groupedDaily[date][0].temperature} ${groupedDaily[date][0].temperatureUnit}
+        Low: ${groupedDaily[date][groupedDaily[date].length - 1].temperature} ${groupedDaily[date][groupedDaily[date].length - 1].temperatureUnit}`;
+
+        // Create charts for hourly temperature, precipitation, and wind speed
+        const tempChartDiv = document.createElement('div');
+        tempChartDiv.className = 'collcontent';
+        tempChartDiv.innerHTML = "<canvas id='" + date + "temp'></canvas>";
+        cardContent.appendChild(tempChartDiv);
+
+        const precipChartDiv = document.createElement('div');
+        precipChartDiv.className = 'collcontent';
+        precipChartDiv.innerHTML = "<canvas id='" + date + "precip'></canvas>";
+        cardContent.appendChild(precipChartDiv);
+
+        const windChartDiv = document.createElement('div');
+        windChartDiv.className = 'collcontent';
+        windChartDiv.innerHTML = "<canvas id='" + date + "wind'></canvas>";
+        cardContent.appendChild(windChartDiv);
+
+        // Prepare the data for the charts (e.g., temperature, precipitation, wind speed)
+        const startTimeValues = groupedHourly[date].map(period => new Date(Date.parse(period.startTime)).getHours());
+        const temperatureValues = groupedHourly[date].map(period => period.temperature);
+        const windValues = groupedHourly[date].map(period => period.windSpeed.split(" ")[0]);
+        const precipValues = groupedHourly[date].map(period => period.probabilityOfPrecipitation.value);
+
+        // Create and display the charts
+        let ctx = document.getElementById(date + "temp").getContext('2d');
+        createDataChart(ctx, date, "line", "Temperature", startTimeValues, temperatureValues);
+
+        ctx = document.getElementById(date + "precip").getContext('2d');
+        createDataChart(ctx, date, "bar", "Precipitation Probability", startTimeValues, precipValues);
+
+        ctx = document.getElementById(date + "wind").getContext('2d');
+        createDataChart(ctx, date, "bar", "Wind Speed", startTimeValues, windValues);
+    }
+
+    // Toggle functionality for showing/hiding the weather charts
+    document.querySelectorAll('.card').forEach(contentDiv => {
+        contentDiv.addEventListener('click', function () {
             this.classList.toggle('active');
             const matches = this.querySelectorAll('.collcontent');
             matches.forEach((i) => {
                 const computedStyle = getComputedStyle(i);
                 if (computedStyle.display === 'none') {
                     i.style.display = 'block';
-                    } else {
+                } else {
                     i.style.display = 'none';
                 }
             });
         });
     });
+}
 
-
-	return false;
-};
-
-
-
-async function searchAddress(form) {
-    document.getElementById('address-list').replaceChildren();
-    document.getElementById('submit').disabled = true;
-    document.getElementById('submit').value = "working...";
-
-    json = await nominatimLookup(form.locsearch.value);
-    console.log(json);
-    if (json.error != null) {
-        document.getElementById("address").innerHTML = "Unable to search location";
-        document.getElementById('submit').disabled = false;
-        document.getElementById('submit').value = "Search";
-        return false;
-    } else {
-        for (f in json) {
-            console.log(json[f]);
-            console.log(json[f].display_name);
-            createAddressCard(json[f]);
+function groupByDate(periods) {
+    const groupedPeriods = {};
+    periods.forEach(period => {
+        const date = period.startTime.split('T')[0];
+        if (!groupedPeriods[date]) {
+            groupedPeriods[date] = [];
         }
-        document.getElementById('submit').disabled = false;
-        document.getElementById('submit').value = "Search";
-    }
-
-    return false;
-};
-
-function createAddressCard(feature) {
-    var n = document.createElement('div');
-    n.className = 'address-search';
-    console.log("feature");
-    console.log(feature);
-    n.addEventListener('click', function () {
-        document.querySelectorAll('.address-search').forEach(i => {i.style.backgroundColor = "";});
-        this.style.backgroundColor = 'lightblue';
-        useMyLoc([feature.lat, feature.lon]);
+        groupedPeriods[date].push(period);
     });
-    var m = document.createElement('div');
-    m.className = 'address-item';
-    m.innerHTML += feature.display_name;
-    n.appendChild(m);
-    document.getElementById("address-list").appendChild(n);
-    n.style.display = 'block';
+    return groupedPeriods;
+}
+
+function createDataChart(ctx, id, type, title, xData, yData) {
+    const myChart = new Chart(ctx, {
+        type: type,
+        data: {
+            labels: xData,
+            datasets: [{ data: yData }]
+        },
+        options: {
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: title }
+            },
+            scales: {
+                y: {
+                    min: type === "bar" ? 0 : (Math.min(...yData) - 5),
+                    max: title === "Precipitation Probability" ? 100 : (Math.max(...yData) + 5)
+                }
+            },
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+    return myChart;
 }
 
 
-const getLoc = async () => {
-    const pos = await new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject);
-    });
-
-    return [pos.coords.latitude,pos.coords.longitude];
-
-};
-
-
-async function useMyLoc(coords) {
-    if(coords == null){
-        coords = await getLoc();
-    }
-    console.log(coords);
-    document.getElementById("address-card").style.display = 'block';
-	document.getElementById("address").innerHTML = coords;
-    addressLookup(coords);
-};
 </script>
-
-</body>
