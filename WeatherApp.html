@@ -9,11 +9,25 @@
   <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.js"></script>
 </head>
 <style>
-  h1 {
-    text-align: center;
-  }
   html * {
     font-family: 'Helvetica';
+  }
+  h1 {
+    text-align: center;
+    color: white;
+  }
+  body {
+    background-color: rgb(162, 193, 205);
+  }
+  p {
+    text-align:center;
+    color:white;
+  }
+  .ui-widget {
+    text-align:center;
+  }
+  .ui-menu-item {
+    text-align:left;
   }
   .p-container {
     display: grid;
@@ -21,13 +35,20 @@
     align-items: flex-start;
   }
   .p-container .card {
-    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
     transition: 0.3s;
-    border-radius: 5px;
-    margin: 10px;
+    border-radius: 15px;
+    width: 100%;
+    max-width: 1000px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top:5px;
+    margin-bottom:5px;
+    text-align: center;
+    background-color: white;
   }
   .p-container .card:hover {
-    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+    box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
   }
   .p-container .card .content{
     margin: 1vw 1vw 1vw 1vw;
@@ -41,12 +62,13 @@
 <body>
 <h1>U.S. Weather</h1>
 <div class="ui-widget">
-  <label for="searchLocation">Location: </label>
-  <input id="searchLocation">
+  <label for="searchLocation" style="color:white; text-align: left;;">Search Location: </label>
+  <input id="searchLocation" style="text-align:left;">
+  <br><br>
   <input id ="myLocation" type="button" onclick="return useMyLoc();" value="Use My Location">
 </div>
 <p id="weatherLocation"></p>
-<div class="p-container", id = "p-container">
+<div class="p-container" id ="p-container">
 </div>
 </body>
 </html>
@@ -171,7 +193,7 @@ function displayWeatherData(dailyForecastData, hourlyForecastData) {
     for (let date in groupedDaily) {
         // Create a new div for each date's forecast
         const cardDiv = document.createElement('div');
-        cardDiv.className = 'card';
+        cardDiv.className = "p-container card";
         document.getElementById("p-container").appendChild(cardDiv);
 
         // Create the content for each card
